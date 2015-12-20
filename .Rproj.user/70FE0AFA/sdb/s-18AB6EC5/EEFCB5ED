@@ -1,0 +1,18 @@
+{
+    "contents" : "#\nlibrary(rvest)\nsource(\"sina_data_url.R\")\ngetPeriodRestorationofRightPrice = function(startDate, endDate, stockid){\n  #判断startDate和endDate， 大小关系，是否在不通的季度\n  \n}\n#处理获取指定年份和季度的复权数据\ngetRestorationofRightPrice = function(date, stockid){\n  #获取时间中的年份和季度信息\n  request_parameter = format(as.yearqtr(as.Date(date)), format = \"year=%Y&jidu=%q\")\n  url = paste(RestorationofRight_url,stockid,\".phtml?\",request_parameter,sep = \"\")\n  print(url)\n  webpage = read_html(url)#请求网页\n  #解析网页中的历史复权数据\n  data_table = (webpage %>% html_node(\"table#FundHoldSharesTable\") %>% html_table())\n  colnames(data_table) = data_table[1,]#数据的第一行为表头\n  data_table = data_table[-1,]#去掉第一行\n  rownames(data_table) = data_table[,1]#将时间信息转成行索引\n  data_table = data_table[,-1]#去掉第一列\n  for(i in 1:ncol(data_table)){\n    #将数字字符串转成数字\n    data_table[,i] = as.numeric(data_table[,i])\n  }\n  return (data_table)\n}\n\nstockid = \"600030\"\n\n",
+    "created" : 1450444036890.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "889085612",
+    "id" : "EEFCB5ED",
+    "lastKnownWriteTime" : 1450577472,
+    "path" : "~/R_shiny_workspace/sina_financial.R",
+    "project_path" : "sina_financial.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "type" : "r_source"
+}

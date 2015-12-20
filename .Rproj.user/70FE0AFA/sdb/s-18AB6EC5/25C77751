@@ -1,0 +1,18 @@
+{
+    "contents" : "#复权历史交易信息页面\nRestorationofRight_url = \"http://vip.stock.finance.sina.com.cn/corp/go.php/vMS_FuQuanMarketHistory/stockid/\"\n",
+    "created" : 1450494955028.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3308678851",
+    "id" : "25C77751",
+    "lastKnownWriteTime" : 1450495034,
+    "path" : "~/R_shiny_workspace/sina_data_url.R",
+    "project_path" : "sina_data_url.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "type" : "r_source"
+}

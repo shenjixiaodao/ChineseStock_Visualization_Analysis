@@ -1,0 +1,17 @@
+{
+    "contents" : "# server.R\n\nlibrary(quantmod)\nlibrary(stringr)\n#source(\"helpers.R\")\n#library(rvest)\n\nshinyServer(function(input, output) {\n  stockID_pattern = \"\\\\d{6}\\\\.[sS][sSzZ]\"\n  \n  dataInput <- reactive({\n    setSymbolLookup(GZMT=list(name=input$symb,src='yahoo'))\n    data <- getSymbols(\"GZMT\", \n                       from = input$dates[1],\n                       to = input$dates[2],\n                       auto.assign = FALSE)\n    return (data)\n  })\n  \n  output$plot <- renderPlot({\n    if(length(grep(stockID_pattern, str_trim(input$symb))) == 0)\n      return (NA)\n    #chartSeries(GZMT)\n    chartSeries(dataInput(), theme = chartTheme(\"white\"), \n                type = \"line\", log.scale = input$log, TA = NULL)\n  })\n  \n})\n\n\nsetSymbolLookup(GZMT=list(name=\"600030.ss\",src='yahoo'))\ndata <- getSymbols(\"GZMT\", \n                   from = \"2013-01-01\",\n                   to = as.character(Sys.Date()),\n                   auto.assign = FALSE)\n\n\n\n",
+    "created" : 1450428034050.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3736345277",
+    "id" : "3D253C3A",
+    "lastKnownWriteTime" : 1450444252,
+    "path" : "~/R_shiny_workspace/server.R",
+    "project_path" : "server.R",
+    "properties" : {
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "type" : "r_source"
+}
