@@ -1,13 +1,13 @@
 {
-    "contents" : "#复权历史交易信息页面\nRestorationofRight_url = \"http://vip.stock.finance.sina.com.cn/corp/go.php/vMS_FuQuanMarketHistory/stockid/\"\n",
+    "contents" : "#复权历史交易信息页面\nRestorationofRight_url = \"http://vip.stock.finance.sina.com.cn/corp/go.php/vMS_FuQuanMarketHistory/stockid/\"\n\n#财务摘要\nFinanceSummary_url = function(stockid){\n  return(paste(\"http://vip.stock.finance.sina.com.cn/corp/go.php/vFD_FinanceSummary/stockid/\",\n               stockid,\"/displaytype/4.phtml\", sep = \",\"))\n}\n\n#板块分类\nIndustryCategory_url = \"http://money.finance.sina.com.cn/d/api/openapi_proxy.php/?__s=[[%22bkshy%22,%22%22,0]]&callback=FDC_DC.theTableData\"\n\n\n#IndustryCategory_code = \"new_dzxx\"\n\nIC_Stocks_url = function(IndustryCategory_code){\n  pagecount = 1\n  recordCount = 400#一次把全部取完\n  return(paste(\"http://money.finance.sina.com.cn/d/api/openapi_proxy.php/?__s=[[%22bkshy_node%22,%22\",\n        IndustryCategory_code,\"%22,%22%22,0,\",\n        pagecount,\",\",recordCount,\"]]&callback=FDC_DC.theTableData\",sep = \"\"))\n}\n\n\n",
     "created" : 1450494955028.000,
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "3308678851",
+    "hash" : "1403085316",
     "id" : "25C77751",
-    "lastKnownWriteTime" : 1450495034,
-    "path" : "~/R_shiny_workspace/sina_data_url.R",
+    "lastKnownWriteTime" : 1450614619,
+    "path" : "~/Documents/R_workspace/stock_web/sina_data_url.R",
     "project_path" : "sina_data_url.R",
     "properties" : {
         "tempName" : "Untitled1"

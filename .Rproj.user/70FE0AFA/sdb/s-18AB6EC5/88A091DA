@@ -1,13 +1,13 @@
 {
-    "contents" : "library(shiny)\n\nshinyUI(fluidPage(\n  titlePanel(\"stockVis\"),\n  \n  sidebarLayout(\n    sidebarPanel(\n      helpText(\"Select a stock to examine. \n               Information will be collected from yahoo finance.\"),\n      \n      textInput(\"symb\", \"Symbol\", \"SPY\"),\n      \n      dateRangeInput(\"dates\", \n                     \"Date range\",\n                     start = \"2013-01-01\", \n                     end = as.character(Sys.Date())),\n      \n      br(),\n      br(),\n      \n      checkboxInput(\"log\", \"Plot y axis on log scale\", \n                    value = FALSE),\n      \n      checkboxInput(\"adjust\", \n                    \"Adjust prices for inflation\", value = FALSE)\n      ),\n    \n    mainPanel(plotOutput(\"plot\"))\n  )\n))\n",
+    "contents" : "library(shiny)\n\nshinyUI(fluidPage(\n  titlePanel(\"stockVis\"),\n  \n  sidebarLayout(\n    sidebarPanel(\n      helpText(\"Select a stock to examine. \n               Information will be collected from yahoo finance.\"),\n      \n      textInput(\"symb\", \"Symbol\", \"SPY\"),\n      \n      dateRangeInput(\"dates\", \n                     \"Date range\",\n                     start = \"2013-01-01\", \n                     end = as.character(Sys.Date())),\n      \n      br(),\n      br(),\n      selectInput(\"selectInput\", label = \"selectInput\", \n                  choices = list(`股票1` = \"000001\",`股票2` = \"000002\")),\n      \n      checkboxInput(\"log\", \"Plot y axis on log scale\", \n                    value = FALSE),\n      \n      checkboxInput(\"adjust\", \n                    \"Adjust prices for inflation\", value = FALSE)\n      ),\n      \n    mainPanel(plotOutput(\"plot\"))\n  )\n))\n",
     "created" : 1450428051867.000,
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "2057543223",
+    "hash" : "2906233445",
     "id" : "88A091DA",
-    "lastKnownWriteTime" : 1450418586,
-    "path" : "~/R_shiny_workspace/ui.R",
+    "lastKnownWriteTime" : 1450617425,
+    "path" : "~/Documents/R_workspace/stock_web/ui.R",
     "project_path" : "ui.R",
     "properties" : {
     },

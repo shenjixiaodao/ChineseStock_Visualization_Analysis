@@ -17,6 +17,8 @@ shinyUI(fluidPage(
       
       br(),
       br(),
+      selectInput("selectInput", label = "selectInput", 
+                  choices = list(`股票1` = "000001",`股票2` = "000002")),
       
       checkboxInput("log", "Plot y axis on log scale", 
                     value = FALSE),
@@ -24,7 +26,7 @@ shinyUI(fluidPage(
       checkboxInput("adjust", 
                     "Adjust prices for inflation", value = FALSE)
       ),
-    
+      
     mainPanel(plotOutput("plot"))
   )
 ))

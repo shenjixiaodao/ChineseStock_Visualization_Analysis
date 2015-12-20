@@ -1,16 +1,32 @@
 #
 library(rvest)
 source("sina_data_url.R")
+#============================复权数据==================================
 getPeriodRestorationofRightPrice = function(startDate, endDate, stockid){
-  #判断startDate和endDate， 大小关系，是否在不通的季度
+  startDate = as.Date(startDate)
+  endDate = as.Date(endDate)
+  #判断startDate和endDate， 大小关系，是否在不同的季度
+  if(startDate >= endDate)
+    return ("开始时间必须小于结束时间")
+  yq1 = format(as.yearqtr(startDate), format = "year=%Y&jidu=%q")
+  yq2 = format(as.yearqtr(endDate), format = "year=%Y&jidu=%q")
   
+  if(yq1!=yq2){
+    data = getRestorationofRightPrice(yq1, stockid)
+    data = rbind(data,getRestorationofRightPrice(yq2, stockid))
+  }else
+    data = getRestorationofRightPrice(yq1, stockid)
+    
+  #截取大于范围内的
+  index = rownames(data)
+  data = data[startDate <= index  & endDate >= index,]
+  return (xts(data, order.by = as.Date(rownames(data))))
 }
 #处理获取指定年份和季度的复权数据
-getRestorationofRightPrice = function(date, stockid){
+getRestorationofRightPrice = function(request_parameter, stockid){
   #获取时间中的年份和季度信息
-  request_parameter = format(as.yearqtr(as.Date(date)), format = "year=%Y&jidu=%q")
+  #request_parameter = format(as.yearqtr(date), format = "year=%Y&jidu=%q")
   url = paste(RestorationofRight_url,stockid,".phtml?",request_parameter,sep = "")
-  print(url)
   webpage = read_html(url)#请求网页
   #解析网页中的历史复权数据
   data_table = (webpage %>% html_node("table#FundHoldSharesTable") %>% html_table())
@@ -25,5 +41,17 @@ getRestorationofRightPrice = function(date, stockid){
   return (data_table)
 }
 
-stockid = "600030"
+
+#============================板块股票数据==================================
+getIndustralCategoryStocks = function(url){
+  #获取数据的json主体
+  temp = fromJSON(str_extract_all(read_html(url), "\\[.+\\]")[[1]][2], 
+                  simplifyDataFrame = data.frame)[[1]]
+  
+  colnames(temp$items) = temp$fields
+  return (temp)
+}
+
+#
+
 

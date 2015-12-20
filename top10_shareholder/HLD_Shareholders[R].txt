@@ -1,0 +1,10 @@
+﻿#将文件存储在D:\GTA_R\目录下
+#将文件编码修改为UTF-8
+IDXCOMPO_1=read.delim("D:\\GTA_R\\HLD_Shareholders.txt",header=T)
+attach(IDXCOMPO_1)
+Reptdt=as.Date(Reptdt,format="%Y-%m-%d")
+
+
+__s=[[%22bkshy_node%22,%22new_blhy%22,%22%22,0,1,40]]
+
+__s=[[%22bkshy_node%22,%22new_cbzz%22,%22%22,0,1,40]]
