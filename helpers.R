@@ -1,25 +1,13 @@
-if (!exists(".inflation")) {
-  .inflation <- getSymbols('CPIAUCNS', src = 'FRED', 
-     auto.assign = FALSE)
-}  
-
-# adjusts yahoo finance data with the monthly consumer price index 
-# values provided by the Federal Reserve of St. Louis
-# historical prices are returned in present values 
-adjust <- function(data) {
-
-      latestcpi <- last(.inflation)[[1]]
-      inf.latest <- time(last(.inflation))
-      months <- split(data)               
-      
-      adjust_month <- function(month) {               
-        date <- substr(min(time(month[1]), inf.latest), 1, 7)
-        coredata(month) * latestcpi / .inflation[date][[1]]
-      }
-      
-      adjs <- lapply(months, adjust_month)
-      adj <- do.call("rbind", adjs)
-      axts <- xts(adj, order.by = time(data))
-      axts[ , 5] <- Vo(data)
-      axts
+#计算data 中的收益率
+getYeildRateData = function(data, colname){
+  temp = (data[,3] - data[,1]) / data[,1] * 100
+  colnames(temp) = colname
+  return(temp)
+}
+#返回 data 中指定的列为col， 被命名为 colname
+getFSYieldData = function(data, col,colname){
+  temp = data[,col]
+  temp[,1] = as.numeric(str_extract(temp[,1], "\\d+[.]\\d+"))
+  colnames(temp) = colname
+  return(temp)
 }

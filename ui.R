@@ -1,32 +1,76 @@
 library(shiny)
+library(dygraphs)
+IndexCategory = read.table(IndexCategory_file, header = TRUE,row.names = 3, colClasses = "character",sep = "\t")
+IndustryCategory = read.table(IndustryCategory_file, header = TRUE,row.names = 1, sep = "\t")
+source("datafiles_name.R")
+
+layout_left_width = 2
+layout_right_width = 12 - layout_left_width - 1
 
 shinyUI(fluidPage(
+  
   titlePanel("stockVis"),
   
   sidebarLayout(
     sidebarPanel(
-      helpText("Select a stock to examine. 
-               Information will be collected from yahoo finance."),
-      
-      textInput("symb", "Symbol", "SPY"),
+      helpText("提示文本"),
       
       dateRangeInput("dates", 
-                     "Date range",
-                     start = "2013-01-01", 
+                     "日期范围",
+                     start = "2015-10-01", 
                      end = as.character(Sys.Date())),
       
       br(),
       br(),
-      selectInput("selectInput", label = "selectInput", 
-                  choices = list(`股票1` = "000001",`股票2` = "000002")),
       
       checkboxInput("log", "Plot y axis on log scale", 
-                    value = FALSE),
+                    value = FALSE)
+      #,checkboxInput("adjust", 
+      #              "Adjust prices for inflation", value = FALSE)
+      , width = layout_left_width),
       
-      checkboxInput("adjust", 
-                    "Adjust prices for inflation", value = FALSE)
-      ),
-      
-    mainPanel(plotOutput("plot"))
+    mainPanel(
+      #plotOutput("plot")
+      tabsetPanel(
+        tabPanel("个股记录",
+                 fluidRow(
+                   column(2,textInput("symb", "股票代码", "")),
+                   column(4,selectInput("base_index", label = "加入指数基线", 
+                               choices = {
+                                 #读入行业类别数据
+                                 #temp = t(IndexCategory)
+                                 #隐式返回要求的list数据
+                                 #as.list(temp[2,])
+                                 list()
+                               }, multiple = TRUE)
+                 )),
+                 fluidRow(
+                   dygraphOutput("dygraph")
+                 )
+        ),
+        tabPanel("财务概况", 
+                 fluidRow(
+                   #行业输入
+                   column(2,selectInput("FS_IndustryCategory", label = "行业分类", 
+                                        choices = {
+                                          #读入行业类别数据
+                                          temp = t(IndustryCategory)
+                                          #隐式返回要求的list数据
+                                          as.list(temp[1,])
+                                        })
+                    ),
+                   column(6,selectInput("FS_IC_Stocks", label = "加入个股", 
+                                        choices = {
+                                        }, multiple = TRUE)
+                 )),
+                 fluidRow(
+                   dygraphOutput("FS_dygraph")
+                 )
+        ),
+        tabPanel("收益概况", tableOutput("YeildIndic"))
+      )
+    , width = layout_right_width)
   )
 ))
+
+
