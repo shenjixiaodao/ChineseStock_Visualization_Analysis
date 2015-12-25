@@ -1,5 +1,6 @@
 #
 library(rvest)
+library(RCurl)
 library(jsonlite)
 source("sina_data_url.R")
 #============================复权数据==================================
@@ -96,7 +97,12 @@ getFinanceSummary = function(url){
   return (res)
 }
 
-
+#=========================== 股票查询
+searchStock = function(key){
+  #temp = getURLContent(Stock_Search_url("00"))
+  #iconv(temp, from = "GBK", to = "UTF-8")
+  
+}
 
 
 

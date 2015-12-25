@@ -5,7 +5,7 @@ IndustryCategory = read.table(IndustryCategory_file, header = TRUE,row.names = 1
 source("datafiles_name.R")
 
 layout_left_width = 2
-layout_right_width = 12 - layout_left_width - 1
+layout_right_width = 12 - layout_left_width
 
 shinyUI(fluidPage(
   
@@ -19,7 +19,6 @@ shinyUI(fluidPage(
                      "日期范围",
                      start = "2015-10-01", 
                      end = as.character(Sys.Date())),
-      
       br(),
       br(),
       
@@ -64,10 +63,34 @@ shinyUI(fluidPage(
                                         }, multiple = TRUE)
                  )),
                  fluidRow(
-                   dygraphOutput("FS_dygraph")
+                   column(5,dygraphOutput("FS_asset_dygraph")),
+                   column(5,dygraphOutput("FS_profit_dygraph"))
+                 ),
+                 fluidRow(
+                   column(5,dygraphOutput("FS_cash_dygraph")),
+                   column(5,dygraphOutput("FS_reserve_dygraph"))
                  )
         ),
-        tabPanel("收益概况", tableOutput("YeildIndic"))
+        tabPanel("收益概况", value = "YS",
+                 fluidRow(
+                   #行业输入
+                   column(2,selectInput("YS_IndustryCategory", label = "行业分类", 
+                                        choices = {
+                                          #读入行业类别数据
+                                          temp = t(IndustryCategory)
+                                          #隐式返回要求的list数据
+                                          as.list(temp[1,])
+                                        })
+                   ),
+                   column(6,selectInput("YS_IC_Stocks", label = "加入个股", 
+                                        choices = {
+                                        }, multiple = TRUE)
+                   )),
+                 fluidRow(
+                   tableOutput("YeildIndic")
+                 )
+                 
+        )
       )
     , width = layout_right_width)
   )

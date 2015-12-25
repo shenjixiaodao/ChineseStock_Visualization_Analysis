@@ -32,4 +32,9 @@ IC_Stocks_url = function(IndustryCategory_code){
         pagecount,",",recordCount,"]]&callback=FDC_DC.theTableData",sep = ""))
 }
 
+#个股查询url
+Stock_Search_url = function(key){
+  return(paste("http://suggest3.sinajs.cn/suggest/type=&key=",key,"&name=suggestdata_",
+               as.integer(Sys.time()), sep = ""))
+}
 

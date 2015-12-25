@@ -26,4 +26,11 @@ XUEQIU_user_url = function(userid){
   return(paste("http://xueqiu.com/",userid,sep = ""))
 }
 
+#股票搜索， http://xueqiu.com/stock/search.json?code=00&size=5&key=47bce5c74f
+XUEQIU_StockSearch_url = function(code){
+  size = 5
+  return(paste("http://xueqiu.com/stock/search.json?code=",code,"&size=",size,"&key=47bce5c74f",
+               as.integer(Sys.time()), sep = ""))
+}
+
 #webpage[["tqSkYieldindic"]][["beta52w"]]
