@@ -91,7 +91,7 @@ getFinanceSummary = function(url){
     temp = temp[-1,]
     res = rbind(res, temp)
   }
-  #rownames(res) = rep(colnames(data_table)[1], quartercount)
+  #rownames(res) = NULL
   #转成 xts 对象, 并去掉时间数据列
   res = xts(res, order.by = as.Date(res[,1]))[,-1]
   return (res)

@@ -40,16 +40,20 @@ getXQStockYieldIndic = function(stockid, type){
 }
 
 #解析个股的 follower count
-getXQStockFollowers = function(stockid, type){
-  temp = getURL(XUEQIU_stock_followers_url(stockid, type), useragent = User_Agent,cookie = Cookies())
-  #
+getXQStockFollowers = function(stockid, type, count = 0){
+  temp = getURL(XUEQIU_stock_followers_url(stockid, type, count), useragent = User_Agent,cookie = Cookies())
+  fromJSON(temp)
 }
 
 #=========================== 股票查询
 searchXQStock = function(code){
   temp = getURL(XUEQIU_StockSearch_url(code), useragent = User_Agent,cookie = Cookies())
   temp = fromJSON(temp)[["stocks"]]
-  return(temp[,c(1,2)])
+  if(length(temp) > 0){
+    colnames(temp) = c("代码","名称")
+    return(temp[,c(1,2)])
+  }else
+    return(data.frame())
 }
 
 

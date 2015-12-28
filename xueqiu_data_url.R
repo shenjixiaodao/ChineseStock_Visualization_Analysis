@@ -4,18 +4,18 @@ XUEQIU_stock_url = function(stockid, type){
 }
 
 #个股关注de球友
-XUEQIU_stock_followers_url = function(stockid, type){
+XUEQIU_stock_followers_url = function(stockid, type, count = 14){
   start = 0
-  count = 14
+  #count = 0
   timestamp = as.integer(Sys.time())#时间戳
-  return(paste("http://xueqiu.com/recommend/pofriends.json?type=1&code=",type,
+  return(paste("http://xueqiu.com/recommend/pofriends.json?type=1&code=",toupper(type),
                stockid,"&start=",start,"&count=",count,"&_=",timestamp,sep = ""))
 }
 
 #股票收益指标，http://xueqiu.com/S/SZ300288/GPSYLZB
 XUEQIU_yieldIndex_url = function(stockid, type){
   page = 1
-  size = 4
+  size = 14
   timestamp = as.integer(Sys.time())
   return(paste("http://xueqiu.com/stock/f10/yieldindic.json?symbol=",type,
                stockid,"&page=",page,"&size=",size,"&_=",timestamp,sep = ""))

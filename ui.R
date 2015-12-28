@@ -13,17 +13,10 @@ shinyUI(fluidPage(
   
   sidebarLayout(
     sidebarPanel(
-      helpText("提示文本"),
       
-      dateRangeInput("dates", 
-                     "日期范围",
-                     start = "2015-10-01", 
-                     end = as.character(Sys.Date())),
-      br(),
-      br(),
-      
-      checkboxInput("log", "Plot y axis on log scale", 
-                    value = FALSE)
+      helpText("提示信息:"),
+      verbatimTextOutput("info"),
+      tableOutput("hint")
       #,checkboxInput("adjust", 
       #              "Adjust prices for inflation", value = FALSE)
       , width = layout_left_width),
@@ -41,34 +34,18 @@ shinyUI(fluidPage(
                                  #隐式返回要求的list数据
                                  #as.list(temp[2,])
                                  list()
-                               }, multiple = TRUE)
-                 )),
-                 fluidRow(
-                   dygraphOutput("dygraph")
-                 )
-        ),
-        tabPanel("财务概况", 
-                 fluidRow(
-                   #行业输入
-                   column(2,selectInput("FS_IndustryCategory", label = "行业分类", 
-                                        choices = {
-                                          #读入行业类别数据
-                                          temp = t(IndustryCategory)
-                                          #隐式返回要求的list数据
-                                          as.list(temp[1,])
-                                        })
-                    ),
-                   column(6,selectInput("FS_IC_Stocks", label = "加入个股", 
-                                        choices = {
-                                        }, multiple = TRUE)
-                 )),
-                 fluidRow(
-                   column(5,dygraphOutput("FS_asset_dygraph")),
-                   column(5,dygraphOutput("FS_profit_dygraph"))
+                               }, multiple = TRUE)),
+                   column(3,dateRangeInput("dates", "日期范围",start = "2015-10-01", end = as.character(Sys.Date())))
+                   
                  ),
                  fluidRow(
-                   column(5,dygraphOutput("FS_cash_dygraph")),
-                   column(5,dygraphOutput("FS_reserve_dygraph"))
+                   column(2,uiOutput("followers", inline = TRUE))
+                 ),
+                 fluidRow(
+                   dygraphOutput("dygraph", width = "95%")
+                 ),
+                 fluidRow(
+                   plotOutput("FandV_plot", width = "95%")
                  )
         ),
         tabPanel("收益概况", value = "YS",
@@ -90,8 +67,50 @@ shinyUI(fluidPage(
                    tableOutput("YeildIndic")
                  )
                  
-        )
+        ),
+        tabPanel("财务",
+           fluidRow(
+             #行业输入
+             column(2,selectInput("Finance_IndustryCategory", label = "行业分类", 
+                                  choices = {
+                                    #读入行业类别数据
+                                    temp = t(IndustryCategory)
+                                    #隐式返回要求的list数据
+                                    as.list(temp[1,])
+                                  })
+             ),
+             column(6,selectInput("Finance_IC_Stocks", label = "加入个股", 
+                                  choices = {
+                                  }, multiple = TRUE)
+           )),
+           tabsetPanel(
+             tabPanel("财务概况",
+                fluidRow(plotOutput("FS_graphs",width = "95%", height = "600px"))
+             ),
+             tabPanel("涨幅～财务",
+                      fluidRow(
+                        column(5,plotOutput("UDF_UD_1_plot",width = "95%", click = "FS_dbclick")),
+                        column(5,plotOutput("UDF_UD_2_plot",width = "95%", click = "FS_dbclick"))
+                      ),
+                      fluidRow(
+                        column(5,plotOutput("UDF_UD_3_plot",width = "95%", click = "FS_dbclick")),
+                        column(5,plotOutput("UDF_UD_4_plot",width = "95%", click = "FS_dbclick"))
+                      ),
+                      fluidRow(
+                        column(5,plotOutput("UDF_UD_5_plot",width = "95%", click = "FS_dbclick")),
+                        column(5,plotOutput("UDF_UD_6_plot",width = "95%", click = "FS_dbclick"))
+                      )
+                      #                 fluidRow(
+                      #                   column(4,plotOutput("FS_asset_dygraph", height = "300px")),
+                      #                   column(4,plotOutput("FS_profit_dygraph", height = "300px"))
+                      #                 ),
+                      #                 fluidRow(
+                      #                   column(4,plotOutput("FS_cash_dygraph", height = "300px")),
+                      #                   column(4,plotOutput("FS_reserve_dygraph", height = "300px"))
+                      #                 )
+             ),id = "F_Panel")
       )
+      ,type = "pills")
     , width = layout_right_width)
   )
 ))

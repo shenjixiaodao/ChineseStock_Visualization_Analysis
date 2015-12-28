@@ -2,7 +2,11 @@
 
 library(quantmod)
 library(stringr)
-
+library(reshape2)
+#library(lattice)
+#library(parallel)
+library(ggplot2)
+#library(plotly)
 #source("helpers.R")
 #library(rvest)
 source("sina_financial.R")
@@ -11,12 +15,23 @@ source("xueqiu_financial.R")
 
 shinyServer(function(input, output, session) {
   stockID_pattern = "\\d{6}"
+  #================== 全局变量
+  info = NULL
+  
+  #================== end
+  
   stockid = ""
   data = NULL
+  FandV_data = NULL
   start_date = "1990-10-01"
   end_date = "1990-10-01"
   dataInput <- reactive({
-    if(start_date != input$dates[1] | end_date != input$dates[2] | stockid != input$symb){
+    input_stockid = stockPanel_InputValidate(input, output, session)
+    if(is.null(input_stockid))
+      return(NULL)
+    #input_stockid = substr(input_stockid, 3, 8)
+    
+    if(start_date != input$dates[1] | end_date != input$dates[2] | stockid != input_stockid){
       #==================================修改了个股状态，更新数据
       #更新 基指标 选择框
       updateSelectInput(session,"base_index",choices = {
@@ -27,25 +42,26 @@ shinyServer(function(input, output, session) {
       }, selected = NULL)
       
       #修改全局环境data
-      temp = getPeriodHistoryPrice(input$dates[1],input$dates[2],input$symb,getRestorationofRightPrice)
-      data <<- getYeildRateData(temp, "个股")
+      temp = getPeriodHistoryPrice(input$dates[1],input$dates[2],substr(input_stockid, 3, 8),getRestorationofRightPrice)
+      data <<- getYeildRateData(temp, input$symb)#获取涨幅率数据
+      FandV_data <<- cbind(data, temp[,5])#涨幅率和交易了
+      
       start_date <<- input$dates[1]#修改全局环境start_date
       end_date <<- input$dates[2]#修改全局环境end_date
-      stockid <<- input$symb#修改当前内存中的个股
+      stockid <<- input_stockid#修改当前内存中的个股
       
       print("change stock")
     }
     if(!is.null(data) & !is.null(input$base_index)){
       
       have_base_index = input$base_index %in% str_extract(colnames(data),"\\d{6}")
-      print(paste("have base index ", str_extract(colnames(data),"\\d{6}"), sep = ","))
       #保证data中只有选择的 指数 和 个股
-      data <<- data[, c("个股",paste(rownames(IndexCategory[IndexCategory$code %in% input$base_index[have_base_index],]),
+      data <<- data[, c(input$symb,paste(rownames(IndexCategory[IndexCategory$code %in% input$base_index[have_base_index],]),
                             input$base_index[have_base_index], sep = "."))]
       
       #将未加载的 指数 数据加入请求队列 , 在列名中提取 股票id
       new_base_index = input$base_index[!have_base_index]
-      print(paste("new base index ", new_base_index, sep = ","))
+      #print(paste("new base index ", new_base_index, sep = ","))
       if(length(new_base_index) > 0){
         temp = getPeriodHistoryPrice(input$dates[1],input$dates[2],new_base_index,getIndexHistory)
         temp = getYeildRateData(temp, paste(rownames(IndexCategory[IndexCategory$code %in% new_base_index,]),
@@ -53,7 +69,7 @@ shinyServer(function(input, output, session) {
         data <<- cbind(data,temp)
       }
       
-      print(colnames(data))
+      #print(colnames(data))
       #暂停一会儿
     }else
       data <<- data[,1]#保证当没有 指数 被选时只有个股
@@ -62,13 +78,20 @@ shinyServer(function(input, output, session) {
   })
   
   output$dygraph <- renderDygraph({
-    if(length(grep(stockID_pattern, str_trim(input$symb))) == 0){
-      #清空 基指标 选择框
-      updateSelectInput(session,"base_index",choices = {list()}, selected = NULL)
-      return()
-    }
+    
     #展示复权股价
-    dygraph(dataInput(),main = "日波动率")
+    data = dataInput()
+    if(!is.null(data)){
+      output$FandV_plot <- renderPlot({
+        temp = as.data.frame(FandV_data)
+        colnames(temp) = c("rate","volume")
+        temp$date = rownames(temp)
+        temp$group = "1"
+        FandV_plot(temp)
+        #plot(volume ~ rate, data = temp)
+      })
+      dygraph(data,main = paste(input$symb,"日波动率",sep = "-"))
+    }
   })
   
   #=======================finance summary reactive
@@ -78,11 +101,11 @@ shinyServer(function(input, output, session) {
   FS_reserve_data = NULL
   FS_industray_category = ""
   FS_profit_datainput <- reactive({
-    if(input$FS_IndustryCategory != FS_industray_category){
-      #print(input$FS_IndustryCategory)
+    if(input$Finance_IndustryCategory != FS_industray_category){
+      #print(input$Finance_IndustryCategory)
       #更新 行业类别内的个股 选择框
-      updateSelectInput(session,"FS_IC_Stocks",choices = {
-          temp = getIndustralCategoryStocks(IC_Stocks_url(input$FS_IndustryCategory))
+      updateSelectInput(session,"Finance_IC_Stocks",choices = {
+          temp = getIndustralCategoryStocks(IC_Stocks_url(input$Finance_IndustryCategory))
           as.list(temp[2,])
         }, selected = NULL
       )
@@ -90,22 +113,22 @@ shinyServer(function(input, output, session) {
       FS_asset_data <<- NULL
       FS_cash_data <<- NULL
       FS_reserve_data <<- NULL
-      FS_industray_category <<- input$FS_IndustryCategory
+      FS_industray_category <<- input$Finance_IndustryCategory
       #return(NULL)
     }
     
-    if(!is.null(input$FS_IC_Stocks)){
-      have_stocks = input$FS_IC_Stocks %in% str_extract(colnames(FS_profit_data),"\\d{6}")
+    if(!is.null(input$Finance_IC_Stocks)){
+      have_stocks = input$Finance_IC_Stocks %in% str_extract(colnames(FS_profit_data),"\\d{6}")
       #保证FS_profit_data中只有选择的
-      FS_profit_data <<- FS_profit_data[, paste("X",input$FS_IC_Stocks[have_stocks], sep = "")]
-      FS_asset_data <<- FS_asset_data[, paste("X",input$FS_IC_Stocks[have_stocks], sep = "")]
-      FS_cash_data <<- FS_cash_data[, paste("X",input$FS_IC_Stocks[have_stocks], sep = "")]
-      FS_reserve_data <<- FS_reserve_data[, paste("X",input$FS_IC_Stocks[have_stocks], sep = "")]
+      FS_profit_data <<- FS_profit_data[, paste("X",input$Finance_IC_Stocks[have_stocks], sep = "")]
+      FS_asset_data <<- FS_asset_data[, paste("X",input$Finance_IC_Stocks[have_stocks], sep = "")]
+      FS_cash_data <<- FS_cash_data[, paste("X",input$Finance_IC_Stocks[have_stocks], sep = "")]
+      FS_reserve_data <<- FS_reserve_data[, paste("X",input$Finance_IC_Stocks[have_stocks], sep = "")]
       #将未加载的 指数 数据加入请求队列 , 在列名中提取 股票id
-      new_stocks = input$FS_IC_Stocks[!have_stocks]
+      new_stocks = input$Finance_IC_Stocks[!have_stocks]
       if( length(new_stocks) > 0){
         for(new_stock in new_stocks){
-          #当有新的被选中时
+          #当有新的被选中时, 请求新数据
           temp = getFinanceSummary(FinanceSummary_url(new_stock))
           temp_asset = getFSYieldData(temp,1,paste("X",new_stock, sep = ""))#取每股净资产
           temp_profit = getFSYieldData(temp,2,paste("X",new_stock, sep = ""))#取每股收益
@@ -132,29 +155,37 @@ shinyServer(function(input, output, session) {
     return(NULL)
   })
   
-  output$FS_asset_dygraph <- renderDygraph({
+  #output$FS_graphs <- renderDygraph({
+  output$FS_graphs <- renderPlot({
     data = FS_profit_datainput()
-    #lapply(data, function(x){print(names(x))})
-    #
-    output$FS_profit_dygraph <- renderDygraph({
-      if(!is.null(data))
-        dygraph(data$profit, xlab = index(data$cash),main = "每股收益")
-    })
-    #
-    output$FS_cash_dygraph <- renderDygraph({
-      if(!is.null(data))
-        dygraph(data$cash, xlab = index(data$cash),main = "每股现金含量")
-    })
-    #
-    output$FS_reserve_dygraph <- renderDygraph({
-      if(!is.null(data))
-        dygraph(data$reserve,main = "每股公积金")
-    })
-    #
-    if(!is.null(data))
-      dygraph(data$asset,main = "每股净资产")
+    
+    if(!is.null(data)){
+      temp1 = data.frame()
+      for( name in names(data)){
+        temp = as.data.frame(data[name])
+        temp$date = rownames(temp)
+        temp = melt(temp, "date")
+        temp$class = name
+        temp1 = rbind(temp1,temp)
+      }
+     # xyplot(as.numeric(value) ~ as.factor(date) | as.factor(class), groups = variable, 
+     #        data = temp1, type = "o", main = "asset per-share",xlab = "",ylab = "",
+     #        layout=c(2,2))
+      g = ggplot(data = temp1, aes(x=as.factor(date), y=as.numeric(value), 
+            col = as.factor(str_extract(variable, "\\d{6}")), group = as.factor(variable)))
+      g = g + geom_point() + geom_line() + facet_wrap(~class,scales="free_y")
+      g + xlab("") + ylab("") + theme(
+        legend.position = "left",
+        legend.title = element_blank(),
+        strip.text = element_text(size = 20, face = "bold"),
+        axis.text = element_text(size = 15),
+        strip.background = element_rect(fill = "transparent"),
+        legend.text = element_text(size = 15)
+      )
+    }
     else
       NULL
+    
   })
   #======================= FS END ========================
   
@@ -206,6 +237,35 @@ shinyServer(function(input, output, session) {
   output$YeildIndic <- renderTable({
     YS_datainput()
     #getXQStockYieldIndic("000001","sz")
+  })
+  
+  #==================  up and down ~ finance
+  output$followers <- renderUI({
+    data = dataInput()
+    if(!is.null(data)){
+      tc = getXQStockFollowers(substr(stockid, 3, 8),substr(stockid, 1, 2), 0)[["totalcount"]]#返回关注人数
+      HTML(paste0("<a href=\"http://xueqiu.com/S/",stockid,"/follows\"><label 
+                  id=\"follower\" class=\"shiny-text-output\">",tc,"</label></a>人关注"))
+    }
+    else
+      "-人关注"
+  })
+  
+  output$UDF_UD_1_plot <- renderPlot({
+    data = FS_profit_datainput()
+    if(!is.null(data)){
+      
+      output$UDF_UD_2_plot <- renderPlot({FF_plot(data, names(data)[1], names(data)[3])})
+      output$UDF_UD_3_plot <- renderPlot({FF_plot(data, names(data)[1], names(data)[4])})
+      output$UDF_UD_4_plot <- renderPlot({FF_plot(data, names(data)[2], names(data)[3])})
+      output$UDF_UD_5_plot <- renderPlot({FF_plot(data, names(data)[2], names(data)[4])})
+      output$UDF_UD_6_plot <- renderPlot({FF_plot(data, names(data)[3], names(data)[4])})
+      FF_plot(data, names(data)[1], names(data)[2])
+      #plot_ly(temp, x = asset, y = profit, text = paste("date: ", date),
+      #        mode = "markers", color = carat, size = carat)
+    }else
+      NULL
+    
   })
 })
 
