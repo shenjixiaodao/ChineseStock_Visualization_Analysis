@@ -29,10 +29,6 @@ shinyUI(fluidPage(
                    column(2,textInput("symb", "股票代码", "")),
                    column(4,selectInput("base_index", label = "加入指数基线", 
                                choices = {
-                                 #读入行业类别数据
-                                 #temp = t(IndexCategory)
-                                 #隐式返回要求的list数据
-                                 #as.list(temp[2,])
                                  list()
                                }, multiple = TRUE)),
                    column(3,dateRangeInput("dates", "日期范围",start = "2015-10-01", end = as.character(Sys.Date())))
@@ -45,28 +41,28 @@ shinyUI(fluidPage(
                    dygraphOutput("dygraph", width = "95%")
                  ),
                  fluidRow(
-                   plotOutput("FandV_plot", width = "95%")
+                   column(width = 4,plotOutput("RtoV_plot")),
+                   column(width = 8,plotOutput("RandV_plot"))
                  )
         ),
         tabPanel("收益概况", value = "YS",
-                 fluidRow(
-                   #行业输入
-                   column(2,selectInput("YS_IndustryCategory", label = "行业分类", 
-                                        choices = {
-                                          #读入行业类别数据
-                                          temp = t(IndustryCategory)
-                                          #隐式返回要求的list数据
-                                          as.list(temp[1,])
-                                        })
-                   ),
-                   column(6,selectInput("YS_IC_Stocks", label = "加入个股", 
-                                        choices = {
-                                        }, multiple = TRUE)
-                   )),
-                 fluidRow(
-                   tableOutput("YeildIndic")
-                 )
-                 
+           fluidRow(
+             #行业输入
+             column(2,selectInput("YS_IndustryCategory", label = "行业分类", 
+                                  choices = {
+                                    #读入行业类别数据
+                                    temp = t(IndustryCategory)
+                                    #隐式返回要求的list数据
+                                    as.list(temp[1,])
+                                  })
+             ),
+             column(6,selectInput("YS_IC_Stocks", label = "加入个股", 
+                                  choices = {
+                                  }, multiple = TRUE)
+             )),
+           fluidRow(
+             tableOutput("YeildIndic")
+           )
         ),
         tabPanel("财务",
            fluidRow(
@@ -100,15 +96,21 @@ shinyUI(fluidPage(
                         column(5,plotOutput("UDF_UD_5_plot",width = "95%", click = "FS_dbclick")),
                         column(5,plotOutput("UDF_UD_6_plot",width = "95%", click = "FS_dbclick"))
                       )
-                      #                 fluidRow(
-                      #                   column(4,plotOutput("FS_asset_dygraph", height = "300px")),
-                      #                   column(4,plotOutput("FS_profit_dygraph", height = "300px"))
-                      #                 ),
-                      #                 fluidRow(
-                      #                   column(4,plotOutput("FS_cash_dygraph", height = "300px")),
-                      #                   column(4,plotOutput("FS_reserve_dygraph", height = "300px"))
-                      #                 )
              ),id = "F_Panel")
+      ),
+      tabPanel("大盘走势", value = "YS",
+         fluidRow(
+           column(4,selectInput("portfolio_index", label = "加入指数", 
+                  choices = {
+                    temp = t(IndexCategory)
+                    #隐式返回要求的list数据
+                    as.list(temp[2,])
+                  }, multiple = TRUE)),
+           column(3,dateRangeInput("portfolio_dates", "日期范围",start = "2015-10-01", end = as.character(Sys.Date())))
+        ),
+        fluidRow(
+          column(width = 12,plotOutput("portfolio_RandV_plot", height = "700px"))
+        )
       )
       ,type = "pills")
     , width = layout_right_width)

@@ -57,15 +57,16 @@ FF_plot = function(data, indic1, indic2, legend.position = "bottom"){
 }
 
 #涨幅 and 交易量
-FandV_plot = function(data){
+FandV_plot = function(data, legend.position = "top"){
   grid.newpage()
   
   # two plots
-  p1 <- ggplot(data, aes(x = date, y = rate, group = as.factor(group), col = group)) 
-  p1<- p1 + geom_point(pch = 1) + geom_line() + theme_bw() %+replace% theme(
-      legend.position = "top"
+  p1 <- ggplot(data, aes(x = date, y = volume, group = as.factor(group))) + ylab("volume(M)")
+  p1 <- p1 + geom_point(pch = 1) + geom_line(col = "red") + ggtitle("volume and rate") +  theme_bw() %+replace% theme(
+      legend.position = legend.position
     )
-  p2 <- ggplot(data, aes(x = date, y = volume, group = group, col = group)) + geom_point(pch = 2) + geom_line() + theme_bw() %+replace% 
+  p2 <- ggplot(data, aes(x = date, y = rate, group = group, col = group)) + ylab("rate")
+  p2 <- p2 + geom_point(pch = 2) + geom_line(col = "black") + theme_bw() %+replace% 
     theme(panel.background = element_rect(fill = NA))
   
   # extract gtable
@@ -91,5 +92,79 @@ FandV_plot = function(data){
   grid.draw(g)
 }
 
+FandV_plot2 = function(data, main = "rate and volume", colnames = c("rate", "volume(M)")){
+  #涨幅大于0的标记为红色， 反之为绿色 
+  data$color = vapply(data[,colnames[1]], FUN = function(x){
+    if(x>0) 
+      return("green") 
+    else 
+      return("red")
+  },"colorname")
+  
+  data = melt(data, c("date","color"))
+  p <- ggplot(data = data, aes(x = date, y = value)) + ylab("") + ggtitle(main) + theme(
+    strip.text = element_text(size = 15, face = "bold"),
+    axis.title = element_blank(),
+    panel.margin = unit(0.5, 'mm'),
+    axis.text.x = element_text(size = 10),
+    legend.position="none"
+  ) + scale_x_discrete(labels={
+    date = unique(data$date)
+    mod = as.integer(length(date)/9)
+    for(i in 2:length(date)){
+      if(i%%mod != 0)
+        date[i] = ""
+    }
+    date
+  }) + scale_linetype_manual(values = c(3))# 使用虚线
+  p <- p + facet_grid(variable~., scale="free")
+  # =============== 第一块面板
+  #加入线图层
+  p <- p + layer(data= data[data$variable==colnames[1],], mapping=aes(x=date, y=value,group=variable, linetype = "3"), 
+                 geom = c("line"), stat = "identity", position = "identity",params = list(na.rm = FALSE))
+  #加入 点 图层
+  p <- p + layer(data= data[data$variable==colnames[1],], mapping=aes(x=date, y=value,group=variable,col = color), 
+                 geom = c("point"), stat = "identity", position = "identity",params = list(na.rm = FALSE))
+  # =============== 第二块面板
+  p <- p + layer(data=data[data$variable==colnames[2],], mapping=aes(x=date, y=value, fill = color),  geom = c("bar"), 
+                 stat = "identity", position = "identity",params = list(na.rm = FALSE))
+  p
+}
 
 
+#在一张图中绘制多个对象
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  #library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}

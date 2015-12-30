@@ -35,7 +35,6 @@ shinyServer(function(input, output, session) {
       #==================================修改了个股状态，更新数据
       #更新 基指标 选择框
       updateSelectInput(session,"base_index",choices = {
-        #读入行业类别数据
         temp = t(IndexCategory)
         #隐式返回要求的list数据
         as.list(temp[2,])
@@ -44,7 +43,7 @@ shinyServer(function(input, output, session) {
       #修改全局环境data
       temp = getPeriodHistoryPrice(input$dates[1],input$dates[2],substr(input_stockid, 3, 8),getRestorationofRightPrice)
       data <<- getYeildRateData(temp, input$symb)#获取涨幅率数据
-      FandV_data <<- cbind(data, temp[,5])#涨幅率和交易了
+      FandV_data <<- cbind(data, temp[,5])#涨幅率和交易量
       
       start_date <<- input$dates[1]#修改全局环境start_date
       end_date <<- input$dates[2]#修改全局环境end_date
@@ -82,13 +81,28 @@ shinyServer(function(input, output, session) {
     #展示复权股价
     data = dataInput()
     if(!is.null(data)){
-      output$FandV_plot <- renderPlot({
-        temp = as.data.frame(FandV_data)
-        colnames(temp) = c("rate","volume")
-        temp$date = rownames(temp)
-        temp$group = "1"
-        FandV_plot(temp)
-        #plot(volume ~ rate, data = temp)
+      cn = c("rate","volume(M)")
+      temp = as.data.frame(FandV_data)
+      colnames(temp) = cn
+      temp[,cn[2]] = temp[,cn[2]] / 1000000
+      temp$date = rownames(temp)
+      
+      
+      output$RtoV_plot <- renderPlot({
+        color = vapply(temp[,cn[1]], FUN = function(x){
+          if(x>0) 
+            return("red") 
+          else 
+            return("green")
+        },"colorname")
+        g = ggplot(temp, aes(x = rate, y = `volume(M)`)) + ggtitle("volume ~ rate")
+        g + geom_point(col = color) + ylab("volume(M)") + xlab("rate") + theme(
+          strip.background = element_rect(fill = "transparent")
+        )
+      })
+      output$RandV_plot <- renderPlot({
+        #temp$group = "1"#只有个股
+        FandV_plot2(temp)
       })
       dygraph(data,main = paste(input$symb,"日波动率",sep = "-"))
     }
@@ -248,7 +262,7 @@ shinyServer(function(input, output, session) {
                   id=\"follower\" class=\"shiny-text-output\">",tc,"</label></a>人关注"))
     }
     else
-      "-人关注"
+      NULL
   })
   
   output$UDF_UD_1_plot <- renderPlot({
@@ -265,7 +279,67 @@ shinyServer(function(input, output, session) {
       #        mode = "markers", color = carat, size = carat)
     }else
       NULL
-    
+  })
+  
+  #====================  portfolio_index
+  PI_rate_data = NULL
+  PI_volume_data = NULL
+  PI_start_date = "1990-10-01"
+  PI_end_date = "1990-10-01"
+  PI_Input <- reactive({
+    if(PI_start_date != input$portfolio_dates[1] | PI_end_date != input$portfolio_dates[2]){
+      #==================================修改了个股状态，更新数据
+      
+      #修改全局环境data
+      PI_start_date <<- input$portfolio_dates[1]#修改全局环境start_date
+      PI_end_date <<- input$portfolio_dates[2]#修改全局环境end_date
+      PI_rate_data <<- NULL
+      PI_volume_data <<- NULL
+    }
+    if(!is.null(input$portfolio_index)){
+      have_base_index = input$portfolio_index %in% str_extract(colnames(PI_rate_data),"\\d{6}")
+      #保证data中只有选择的 指数 和 个股
+      PI_rate_data <<- PI_rate_data[, c(paste("X", input$portfolio_index[have_base_index], sep = "."))]
+      
+      #将未加载的 指数 数据加入请求队列 , 在列名中提取 股票id
+      new_base_index = input$portfolio_index[!have_base_index]
+      if(length(new_base_index) > 0){
+        colname = paste("X", new_base_index,sep = ".")
+        temp = getPeriodHistoryPrice(input$portfolio_dates[1],input$portfolio_dates[2], new_base_index, getIndexHistory)
+        colnames(temp)[5] = colname
+        PI_volume_data <<- cbind(PI_volume_data, temp[,5])#涨幅率和交易量
+        
+        temp = getYeildRateData(temp, colname)
+        PI_rate_data <<- cbind(PI_rate_data,temp)
+      }
+      #暂停一会儿
+      
+      return (list(PI_rate_data=PI_rate_data, PI_volume_data=PI_volume_data))
+    }
+    return(NULL)
+  })
+  
+  output$portfolio_RandV_plot <- renderPlot({
+    data = PI_Input()
+    if(!is.null(data)){
+      plots = list()
+      cn = c("rate","volume(B)")
+      for(var in colnames(data[["PI_rate_data"]])){
+        #生成多个绘图对象
+        temp = as.data.frame(cbind(data[["PI_rate_data"]][,var], data[["PI_volume_data"]][,var]))
+        colnames(temp) = cn
+        temp[,cn[2]] = temp[,cn[2]] / 1000000000
+        temp$date = rownames(temp)
+        
+        plots[[var]] = FandV_plot2(temp, var, cn) + theme(
+          #没增加一个指数，面板标题字体大小减1
+          strip.text = element_text(size = 15 - ncol(data[["PI_rate_data"]]), face = "bold")
+        )
+      }
+      #绘制多个ggplot对象
+      multiplot(plotlist = plots, cols = 1)
+    }else
+      NULL
   })
 })
 
