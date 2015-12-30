@@ -37,13 +37,16 @@ Stock_Search_url = function(key){
   return(paste("http://suggest3.sinajs.cn/suggest/type=&key=",key,"&name=suggestdata_",
                as.integer(Sys.time()), sep = ""))
 }
-
+#查询个股的历史分价
 stock_price_history_url = function(symbol, startDate, endDate){
   startDate = as.Date(startDate)
   endDate = as.Date(endDate)
-  return(paste0("http://market.finance.sina.com.cn/pricehis.php?symbol=",symbol,"&startdate=",
-          startDate,"&enddate=",endDate))
+  return(list(
+    price=paste0("http://market.finance.sina.com.cn/pricehis.php?symbol=",symbol,"&startdate=",
+          startDate,"&enddate=",endDate),
+    UpDown=paste0("http://hq.sinajs.cn/list=",symbol)))
 }
+
 
 
 
