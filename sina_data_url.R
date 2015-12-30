@@ -38,3 +38,12 @@ Stock_Search_url = function(key){
                as.integer(Sys.time()), sep = ""))
 }
 
+stock_price_history_url = function(symbol, startDate, endDate){
+  startDate = as.Date(startDate)
+  endDate = as.Date(endDate)
+  return(paste0("http://market.finance.sina.com.cn/pricehis.php?symbol=",symbol,"&startdate=",
+          startDate,"&enddate=",endDate))
+}
+
+
+

@@ -17,8 +17,6 @@ shinyUI(fluidPage(
       helpText("提示信息:"),
       verbatimTextOutput("info"),
       tableOutput("hint")
-      #,checkboxInput("adjust", 
-      #              "Adjust prices for inflation", value = FALSE)
       , width = layout_left_width),
       
     mainPanel(
@@ -34,16 +32,24 @@ shinyUI(fluidPage(
                    column(3,dateRangeInput("dates", "日期范围",start = "2015-10-01", end = as.character(Sys.Date())))
                    
                  ),
-                 fluidRow(
-                   column(2,uiOutput("followers", inline = TRUE))
-                 ),
-                 fluidRow(
-                   dygraphOutput("dygraph", width = "95%")
-                 ),
-                 fluidRow(
-                   column(width = 4,plotOutput("RtoV_plot")),
-                   column(width = 8,plotOutput("RandV_plot"))
-                 )
+                 tabsetPanel(
+                   tabPanel("浮动记录",
+                            fluidRow(
+                              column(2,uiOutput("followers", inline = TRUE))
+                            ),
+                            fluidRow(
+                              dygraphOutput("dygraph", width = "95%")
+                            ),
+                            fluidRow(
+                              column(width = 4,plotOutput("RtoV_plot")),
+                              column(width = 8,plotOutput("RandV_plot"))
+                            )
+                    ),
+                   tabPanel("分价记录",
+                            fluidRow(plotOutput("PriceHis_plot",width = "95%", height = "600px"))
+                            ,id = "F_Panel"
+                   )
+                )
         ),
         tabPanel("收益概况", value = "YS",
            fluidRow(

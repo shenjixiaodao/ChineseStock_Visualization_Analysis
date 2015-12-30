@@ -104,7 +104,18 @@ searchStock = function(key){
   
 }
 
-
+#========================== 分价历史查询
+stockPriceHistory = function(symbol, startDate, endDate){
+  webpage = read_html(stock_price_history_url(symbol, startDate, endDate), encoding = "gb2312")
+  data_table = (webpage %>% html_node("table#datalist") %>% html_table(fill = TRUE))
+  colnames(data_table) = data_table[1,]#数据的第一行为表头
+  data_table = data_table[-1,-4]#去掉第1行和第4列
+  for(i in 1:ncol(data_table)){
+    #将数字字符串转成数字
+    data_table[,i] = as.numeric(str_extract(data_table[,i],"\\d+[.]{0,1}\\d+"))
+  }
+  return(data_table)
+}
 
 
 
