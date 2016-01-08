@@ -56,5 +56,17 @@ searchXQStock = function(code){
     return(data.frame())
 }
 
+#=========================== 获取关注股票的 热门用户
+getXQStockHotFollowers = function(symbol, top){
+  temp = getURL(XUEQIU_hotFollowers_url(symbol, top), useragent = User_Agent,cookie = Cookies())
+  temp = fromJSON(temp)
+  temp
+}
+
+getXQFollowersPortfolio = function(userid){
+  temp = getURL(XUEQIU_portfolio_url(userid), useragent = User_Agent,cookie = Cookies())
+  temp = fromJSON(temp)
+}
+
 
 

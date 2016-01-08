@@ -23,14 +23,40 @@ shinyServer(function(input, output, session) {
   stockid = ""
   data = NULL
   FandV_data = NULL
+  SPH_data = NULL
   start_date = "1990-10-01"
   end_date = "1990-10-01"
+  
+  priceHisInput <- reactive({
+    
+    input_stockid = stockPanel_InputValidate(input, output, session)
+    if(is.null(input_stockid))
+      return(NULL)
+    
+    if(start_date != input$dates[1] | end_date != input$dates[2] | stockid != input_stockid){
+      SPH_data <<- getStockPriceHistory(input_stockid,input$dates[1],input$dates[2])
+      start_date <<- input$dates[1]#修改全局环境start_date
+      end_date <<- input$dates[2]#修改全局环境end_date
+      stockid <<- input_stockid#修改当前内存中的个股
+    }
+    return(SPH_data)
+  })
+  output$PriceHis_plot <- renderPlot({
+    data = priceHisInput()
+    if(!is.null(data)){
+      g = ggplot(data, aes(x=data[,1], y=data[,3])) + xlab("price") + ylab("percentage") + ggtitle("closing price hist")
+      g + geom_bar(stat = "identity", position = "identity", fill = data[,4])+ theme(
+        title = element_text(size = 20, face = "bold"),
+        axis.text = element_text(size = 15),
+        strip.background = element_rect(fill = "transparent")
+      )
+    }
+  })
+  
   dataInput <- reactive({
     input_stockid = stockPanel_InputValidate(input, output, session)
     if(is.null(input_stockid))
       return(NULL)
-    #input_stockid = substr(input_stockid, 3, 8)
-    
     if(start_date != input$dates[1] | end_date != input$dates[2] | stockid != input_stockid){
       #==================================修改了个股状态，更新数据
       #更新 基指标 选择框
@@ -39,7 +65,6 @@ shinyServer(function(input, output, session) {
         #隐式返回要求的list数据
         as.list(temp[2,])
       }, selected = NULL)
-      
       #修改全局环境data
       temp = getPeriodHistoryPrice(input$dates[1],input$dates[2],substr(input_stockid, 3, 8),getRestorationofRightPrice)
       data <<- getYeildRateData(temp, input$symb)#获取涨幅率数据
@@ -67,8 +92,6 @@ shinyServer(function(input, output, session) {
                                             new_base_index,sep = "."))
         data <<- cbind(data,temp)
       }
-      
-      #print(colnames(data))
       #暂停一会儿
     }else
       data <<- data[,1]#保证当没有 指数 被选时只有个股
@@ -208,7 +231,7 @@ shinyServer(function(input, output, session) {
   YS_industray_category = ""
   YS_datainput <- reactive({
     if(input$YS_IndustryCategory != YS_industray_category){
-      print(input$YS_IndustryCategory)
+      #print(input$YS_IndustryCategory)
       #更新 行业类别内的个股 选择框
       updateSelectInput(session,"YS_IC_Stocks",choices = {
         temp = getIndustralCategoryStocks(IC_Stocks_url(input$YS_IndustryCategory))
@@ -227,7 +250,7 @@ shinyServer(function(input, output, session) {
       if(!is.data.frame(YS_data) & !is.null(YS_data)){
         YS_data <<- as.data.frame(YS_data)
         colnames(YS_data) <<- input$YS_IC_Stocks[have_stocks]
-        print(YS_data)
+        #print(YS_data)
       }
         
       new_stock = input$YS_IC_Stocks[!have_stocks]

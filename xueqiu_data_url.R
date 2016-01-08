@@ -33,4 +33,20 @@ XUEQIU_StockSearch_url = function(code){
                as.integer(Sys.time()), sep = ""))
 }
 
-#webpage[["tqSkYieldindic"]][["beta52w"]]
+#关注股票的 热门用户
+#http://xueqiu.com/recommend/user/stock_hot_user.json?symbol=SH600228&start=5&count=6&_=1451720083530
+XUEQIU_hotFollowers_url = function(symbol, top){
+  start = 0
+  return(paste0("http://xueqiu.com/recommend/user/stock_hot_user.json?symbol=",toupper(symbol),
+                "&start=",start,"&count=",top,"&_=",as.integer(Sys.time())))
+}
+
+#球友的 组合
+#http://xueqiu.com/cubes/list.json?user_id=1852792513&_=1451723177647\
+XUEQIU_portfolio_url = function(userid){
+  return(paste0("http://xueqiu.com/cubes/list.json?user_id=",userid,"&_=",as.integer(Sys.time())))
+}
+
+
+
+

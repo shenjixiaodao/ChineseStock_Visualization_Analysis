@@ -25,11 +25,13 @@ shinyUI(fluidPage(
         tabPanel("个股记录",
                  fluidRow(
                    column(2,textInput("symb", "股票代码", "")),
-                   column(4,selectInput("base_index", label = "加入指数基线", 
-                               choices = {
-                                 list()
-                               }, multiple = TRUE)),
-                   column(3,dateRangeInput("dates", "日期范围",start = "2015-10-01", end = as.character(Sys.Date())))
+                   conditionalPanel(condition = "input.SingleStock_panel == \"浮动记录\"",
+                     column(4,selectInput("base_index", label = "加入指数基线", 
+                            choices = {
+                              list()
+                            }, multiple = TRUE))
+                   ),
+                   column(3,dateRangeInput("dates", "日期范围",start = Sys.Date() - 30, end = Sys.Date()))
                    
                  ),
                  tabsetPanel(
@@ -47,8 +49,7 @@ shinyUI(fluidPage(
                     ),
                    tabPanel("分价记录",
                             fluidRow(plotOutput("PriceHis_plot",width = "95%", height = "600px"))
-                            ,id = "F_Panel"
-                   )
+                   ), id = "SingleStock_panel"
                 )
         ),
         tabPanel("收益概况", value = "YS",

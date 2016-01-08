@@ -105,8 +105,9 @@ searchStock = function(key){
 }
 
 #========================== 分价历史查询
-stockPriceHistory = function(symbol, startDate, endDate){
-  urls = stock_price_history_url(symbol, startDate, endDate)
+getStockPriceHistory = function(symbol, startDate, endDate){
+  urls = stock_price_history_url(tolower(symbol), startDate, endDate)
+  print(urls)
   webpage = read_html(urls[[1]], encoding = "gb2312")
   data_table = (webpage %>% html_node("table#datalist") %>% html_table(fill = TRUE))
   colnames(data_table) = data_table[1,]#数据的第一行为表头
@@ -115,6 +116,17 @@ stockPriceHistory = function(symbol, startDate, endDate){
     #将数字字符串转成数字
     data_table[,i] = as.numeric(str_extract(data_table[,i],"\\d+[.]{0,1}\\d+"))
   }
+  #处理历史分价是涨还是跌, 从urls[[2]]中获取分价的涨跌分界价格
+  temp = iconv(getURLContent(urls[[2]], binary = FALSE), from = "GBK", to = "UTF-8")
+  lastClosePrice = as.numeric(str_extract(temp, "\\d+[.]\\d{2}"))
+  data_table$color = vapply(data_table[,1], function(x){
+    if(x > lastClosePrice)
+      return("red")
+    else if(x < lastClosePrice)
+      return("green")
+    else
+      return("gray")
+  }, FUN.VALUE = "upOrdown")
   return(data_table)
 }
 
