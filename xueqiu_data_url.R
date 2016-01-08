@@ -47,6 +47,23 @@ XUEQIU_portfolio_url = function(userid){
   return(paste0("http://xueqiu.com/cubes/list.json?user_id=",userid,"&_=",as.integer(Sys.time())))
 }
 
+#获取组合id http://xueqiu.com/cubes/discover/rank/cube/list.json?market=cn&category=10&page=1&count=20
+XUEQIU_portfilios_url = function(page, count = 20, market="cn"){
+  return(paste0("http://xueqiu.com/cubes/discover/rank/cube/list.json?market=",market,
+                "&category=10&page=",page,"&count=",count))
+}
+
+#组合表现 http://xueqiu.com/cubes/rank/summary.json?symbol=ZH159088
+XUEQIU_performance_url = function(symbol){
+  return(paste0("http://xueqiu.com/cubes/rank/summary.json?symbol=",toupper(symbol)))
+}
+#仓位配置 http://xueqiu.com/cubes/rebalancing/show_origin.json?rb_id=13597126
+XUEQIU_portfolioConfiguration_url = function(rb_id){
+  return(paste0("http://xueqiu.com/cubes/rebalancing/show_origin.json?rb_id=",rb_id))
+}
+
+
+
 
 
 

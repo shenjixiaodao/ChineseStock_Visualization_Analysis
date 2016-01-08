@@ -27,8 +27,31 @@ shinyServer(function(input, output, session) {
   start_date = "1990-10-01"
   end_date = "1990-10-01"
   
+  output$followers <- renderUI({
+    data = dataInput()
+    if(!is.null(data)){
+      #同时多次请求，被雪球拒绝
+      followersInfo = getXQStockHotFollowers(stockid, 5)
+      #colnames(followersInfo) = c("ID","粉丝","朋友","几何均值","夏普率","总收益")
+      
+      output$xueqiu_followers_info <- renderTable({
+        temp = getXQFollowersPortfolio(followersInfo[,"id"][1])
+        print(temp)
+        temp = cbind(temp, followersInfo[1,])
+        print(temp)
+        colnames(temp) = c("ID","粉丝","朋友","几何均值","夏普率","总收益")
+        temp[,2:5]
+      })
+      
+      tc = getXQStockFollowers(substr(stockid, 3, 8),substr(stockid, 1, 2), 0)[["totalcount"]]#返回关注人数
+      HTML(paste0("<a href=\"http://xueqiu.com/S/",stockid,"/follows\"><label 
+                  id=\"follower\" class=\"shiny-text-output\">",tc,"</label></a>人关注"))
+    }
+    else
+      NULL
+  })
+  
   priceHisInput <- reactive({
-    
     input_stockid = stockPanel_InputValidate(input, output, session)
     if(is.null(input_stockid))
       return(NULL)
@@ -50,7 +73,8 @@ shinyServer(function(input, output, session) {
         axis.text = element_text(size = 15),
         strip.background = element_rect(fill = "transparent")
       )
-    }
+    }else
+      NULL
   })
   
   dataInput <- reactive({
@@ -277,16 +301,6 @@ shinyServer(function(input, output, session) {
   })
   
   #==================  up and down ~ finance
-  output$followers <- renderUI({
-    data = dataInput()
-    if(!is.null(data)){
-      tc = getXQStockFollowers(substr(stockid, 3, 8),substr(stockid, 1, 2), 0)[["totalcount"]]#返回关注人数
-      HTML(paste0("<a href=\"http://xueqiu.com/S/",stockid,"/follows\"><label 
-                  id=\"follower\" class=\"shiny-text-output\">",tc,"</label></a>人关注"))
-    }
-    else
-      NULL
-  })
   
   output$UDF_UD_1_plot <- renderPlot({
     data = FS_profit_datainput()
@@ -364,6 +378,47 @@ shinyServer(function(input, output, session) {
     }else
       NULL
   })
+  #====================  index end ===================
+  
+  #=====================   XUEQIU portfolio
+  page = 1
+  portfolios = data.frame()
+  CurrentConfiguration_data = NULL
+  PortfolioPerformance = NULL
+  PreviousConfiguration = NULL
+  field = c("stock_name","prev_weight_adjusted","target_weight","updated_at",
+            "绝对收益","抗风险","稳定性","选股能力","择时能力","follower_count")
+  colnames = c("股名","先前仓位","最新仓位","调整时间","绝对收益","抗风险","稳定性",
+               "选股能力","择时能力","粉丝数")
+  observeEvent(input$requestPortfolio, {
+    if(nrow(portfolios) == 0){
+      #组合为空，则拉取下一组组合
+      portfolios <<- getXQPortfolios(page)
+    }
+    #则取出第一个组合
+    portfolio = portfolios[1,]
+    portfolios <<- portfolios[-1,]
+    #获取组合里的股票 先前和当前仓位、股票symbol
+    temp = getXQPortfolioConfiguration(portfolio[,"last_rb_id"])
+    pp = p = cbind(getXQPortfoliosPerformance(portfolio[,"symbol"]),portfolio["follower_count"])
+    sn = nrow(temp) -1
+    while(sn > 0){
+      #组合中有多个个股
+      pp = rbind(pp,p)
+      sn = sn - 1
+    }
+    temp = cbind(temp, pp)
+    if(is.null(CurrentConfiguration_data))
+      CurrentConfiguration_data <<- temp[,field]
+    else{
+      CurrentConfiguration_data <<- rbind(CurrentConfiguration_data, temp[,field])
+    }
+    colnames(CurrentConfiguration_data) = colnames
+    output$current_configuration <- renderTable({CurrentConfiguration_data})
+  })
+  #XQPInput <- reactive({
+  #})
+  
 })
 
 

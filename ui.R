@@ -4,7 +4,7 @@ IndexCategory = read.table(IndexCategory_file, header = TRUE,row.names = 3, colC
 IndustryCategory = read.table(IndustryCategory_file, header = TRUE,row.names = 1, sep = "\t")
 source("datafiles_name.R")
 
-layout_left_width = 2
+layout_left_width = 3
 layout_right_width = 12 - layout_left_width
 
 shinyUI(fluidPage(
@@ -13,12 +13,13 @@ shinyUI(fluidPage(
   
   sidebarLayout(
     sidebarPanel(
-      
       helpText("提示信息:"),
-      verbatimTextOutput("info"),
-      tableOutput("hint")
+      tableOutput("hint"),
+      tableOutput("xueqiu_followers_info"),
+      conditionalPanel("output.xueqiu_followers_info", 
+          actionButton("next_followers_info", "next")
+      )
       , width = layout_left_width),
-      
     mainPanel(
       #plotOutput("plot")
       tabsetPanel(
@@ -118,6 +119,20 @@ shinyUI(fluidPage(
         fluidRow(
           column(width = 12,plotOutput("portfolio_RandV_plot", height = "700px"))
         )
+      ),
+      tabPanel("雪球仓位", value = "XQP",
+       actionButton("requestPortfolio","请求组合"),
+       tabsetPanel(
+         tabPanel("当前仓位",
+            tableOutput("current_configuration")
+         ),
+         tabPanel("组合表现",
+            tableOutput("portfolio_performance")
+         ),
+         tabPanel("先前仓位",
+            tableOutput("previous_configuration")
+         )
+       ,id = "XQP_Panel")
       )
       ,type = "pills")
     , width = layout_right_width)
