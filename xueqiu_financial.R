@@ -58,7 +58,7 @@ searchXQStock = function(code){
 }
 
 #=========================== 获取关注股票的 热门用户
-getXQStockHotFollowers = function(symbol, top){
+getXQStockHotFollowers = function(symbol, top, start = 0){
   temp = getURL(XUEQIU_hotFollowers_url(symbol, top), useragent = User_Agent,cookie = Cookies())
   temp = fromJSON(temp)
   field = c("id","followers_count","friends_count")
@@ -76,8 +76,8 @@ getXQFollowersPortfolio = function(userid){
   net_value = temp[,"net_value"]
   #计算收益表现 收益几何平均值、方差、几何平均值／方差
   len = length(net_value)
-  geomean = (prod(net_value))^(1/len) - 1
-  ratio = sum((net_value-1)) / len / sd(net_value)
+  geomean = format((prod(net_value))^(1/len) - 1, digits = 3)
+  ratio = format(sum((net_value-1)) / len / sd(net_value), digits = 3)
   list(geomean = geomean, ratio = ratio, net_value = net_value)
 }
 
@@ -107,7 +107,7 @@ getXQPortfoliosPerformance = function(symbol){
   #field = c("name","score","max_score")
   res = data.frame(x1=1,x2=1,x3=1,x4=1,x5=1)
   colnames(res) = temp[,"name"]
-  res[1,] = format(temp[,"score"] / temp[,"max_score"] * 100, digits = 0)
+  res[1,] = format(temp[,"score"] / temp[,"max_score"] * 100, nsmall = 0)
   res
   #data.frame(name = temp[,"name"], score = temp[,"score"] / temp[,"max_score"])
 }

@@ -35,8 +35,7 @@ XUEQIU_StockSearch_url = function(code){
 
 #关注股票的 热门用户
 #http://xueqiu.com/recommend/user/stock_hot_user.json?symbol=SH600228&start=5&count=6&_=1451720083530
-XUEQIU_hotFollowers_url = function(symbol, top){
-  start = 0
+XUEQIU_hotFollowers_url = function(symbol, top, start = 0){
   return(paste0("http://xueqiu.com/recommend/user/stock_hot_user.json?symbol=",toupper(symbol),
                 "&start=",start,"&count=",top,"&_=",as.integer(Sys.time())))
 }

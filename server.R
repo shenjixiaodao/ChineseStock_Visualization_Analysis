@@ -27,20 +27,54 @@ shinyServer(function(input, output, session) {
   start_date = "1990-10-01"
   end_date = "1990-10-01"
   
+  XQ_Followers = data.frame()
+  XQ_Followers_start = 0
+  XQ_FollosersInfo = data.frame()
+  observeEvent(input$next_followers_info,{
+    if(nrow(XQ_Followers)==0){
+      XQ_Followers <<- getXQStockHotFollowers(stockid, 20, XQ_Followers_start)
+      XQ_Followers_start <<- XQ_Followers_start + 20
+    }
+    
+    #取出第一条 follower
+    xq_follower = XQ_Followers[1,]
+    XQ_Followers <<- XQ_Followers[-1,]
+    
+    output$xueqiu_followers_info <- renderUI({
+      #使用自定义的表格输出
+      myRenderTable({
+        temp = getXQFollowersPortfolio(xq_follower[,"id"])
+        temp = cbind(xq_follower, temp[c("geomean", "ratio")])
+        colnames(temp) = c("ID","粉丝","朋友","几何均值","夏普率")
+        temp[1,1] = paste0("<a href=",XUEQIU_user_url(temp[1,1]),">",temp[1,1],"</a>")
+        XQ_FollosersInfo <<- temp
+        temp
+      })
+    })
+  })
+  
   output$followers <- renderUI({
     data = dataInput()
     if(!is.null(data)){
       #同时多次请求，被雪球拒绝
-      followersInfo = getXQStockHotFollowers(stockid, 5)
-      #colnames(followersInfo) = c("ID","粉丝","朋友","几何均值","夏普率","总收益")
+      #第一次展示 粉丝 信息表
+      XQ_Followers <<- getXQStockHotFollowers(stockid, 20, XQ_Followers_start)
+      XQ_Followers_start <<- XQ_Followers_start + 20
+      #取出第一条 follower
+      xq_follower = XQ_Followers[1,]
+      XQ_Followers <<- XQ_Followers[-1,]
       
-      output$xueqiu_followers_info <- renderTable({
-        temp = getXQFollowersPortfolio(followersInfo[,"id"][1])
-        print(temp)
-        temp = cbind(temp, followersInfo[1,])
-        print(temp)
-        colnames(temp) = c("ID","粉丝","朋友","几何均值","夏普率","总收益")
-        temp[,2:5]
+      output$xueqiu_followers_info <- renderUI({
+        #使用自定义的表格输出
+        myRenderTable({
+          temp = getXQFollowersPortfolio(xq_follower[,"id"])
+          temp = cbind(xq_follower, temp[c("geomean", "ratio")])
+          print(temp)
+          colnames(temp) = c("ID","粉丝","朋友","几何均值","夏普率")
+          temp[1,1] = paste0("<a href=",XUEQIU_user_url(temp[1,1]),">",temp[1,1],"</a>")
+          XQ_FollosersInfo <<- temp
+          temp
+        })
       })
       
       tc = getXQStockFollowers(substr(stockid, 3, 8),substr(stockid, 1, 2), 0)[["totalcount"]]#返回关注人数

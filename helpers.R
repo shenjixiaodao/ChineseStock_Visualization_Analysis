@@ -96,9 +96,9 @@ FandV_plot2 = function(data, main = "rate and volume", colnames = c("rate", "vol
   #涨幅大于0的标记为红色， 反之为绿色 
   data$color = vapply(data[,colnames[1]], FUN = function(x){
     if(x>0) 
-      return("green") 
+      return("red") 
     else 
-      return("red")
+      return("green")
   },"colorname")
   
   data = melt(data, c("date","color"))
@@ -120,14 +120,16 @@ FandV_plot2 = function(data, main = "rate and volume", colnames = c("rate", "vol
   p <- p + facet_grid(variable~., scale="free")
   # =============== 第一块面板
   #加入线图层
-  p <- p + layer(data= data[data$variable==colnames[1],], mapping=aes(x=date, y=value,group=variable, linetype = "3"), 
+  temp = data[data$variable==colnames[1],]
+  p <- p + layer(data= temp, mapping=aes(x=date, y=value,group=variable, linetype = "3"), 
                  geom = c("line"), stat = "identity", position = "identity",params = list(na.rm = FALSE))
   #加入 点 图层
-  p <- p + layer(data= data[data$variable==colnames[1],], mapping=aes(x=date, y=value,group=variable,col = color), 
-                 geom = c("point"), stat = "identity", position = "identity",params = list(na.rm = FALSE))
+  p <- p + layer(data= data[data$variable==colnames[1],], mapping=aes(x=date, y=value,group=variable), 
+                 geom = c("point"), stat = "identity", position = "identity",params = list(na.rm = FALSE,col = temp[,"color"]))
   # =============== 第二块面板
-  p <- p + layer(data=data[data$variable==colnames[2],], mapping=aes(x=date, y=value, fill = color),  geom = c("bar"), 
-                 stat = "identity", position = "identity",params = list(na.rm = FALSE))
+  temp = data[data$variable==colnames[2],]
+  p <- p + layer(data=temp, mapping=aes(x=date, y=value, fill = color),  geom = c("bar"), 
+                 stat = "identity", position = "identity",params = list(na.rm = FALSE, fill=temp[,"color"]))
   p
 }
 
@@ -168,3 +170,15 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
     }
   }
 }
+
+myRenderTable = function(data){
+  thead =  paste0("<tr>",Reduce(function(x,y){paste0(x,"<th>",y,"</th>")},colnames(data), ""),"</tr>")
+  tbody = paste0("",thead)
+  for(i in 1:nrow(data)){
+    tr = paste0("<tr>",Reduce(function(x,y){paste0(x,"<td>",y,"</td>")},data[i,], ""),"</tr>")
+    tbody = paste0(tbody,tr)
+  }
+  HTML(paste0("<table class=\"data table table-bordered table-condensed\"><tbody>",tbody,"</tbody></table>"))
+}
+
+
