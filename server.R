@@ -47,8 +47,8 @@ shinyServer(function(input, output, session) {
         temp = cbind(xq_follower, temp[c("geomean", "ratio")])
         colnames(temp) = c("ID","粉丝","朋友","几何均值","夏普率")
         temp[1,1] = paste0("<a href=",XUEQIU_user_url(temp[1,1]),">",temp[1,1],"</a>")
-        XQ_FollosersInfo <<- temp
-        temp
+        XQ_FollosersInfo <<- rbind(XQ_FollosersInfo,temp)
+        XQ_FollosersInfo
       })
     })
   })
@@ -73,7 +73,7 @@ shinyServer(function(input, output, session) {
           colnames(temp) = c("ID","粉丝","朋友","几何均值","夏普率")
           temp[1,1] = paste0("<a href=",XUEQIU_user_url(temp[1,1]),">",temp[1,1],"</a>")
           XQ_FollosersInfo <<- temp
-          temp
+          XQ_FollosersInfo
         })
       })
       
